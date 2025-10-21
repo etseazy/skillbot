@@ -5,12 +5,19 @@ class FrequencyAgent:
         self.player_id = player_id
         self.opp_counts = [0, 0, 0]  # [Rock, Paper, Scissors]
 
+    def reset(self):
+        # Call this at the start of each new game
+        self.opp_counts = [0, 0, 0]
+
     def select_action(self, obs, action_space):
-        # Extract opponent's last move from observation
-        print(obs)
-        print(type(obs))
-        obs_array = obs["observation"]
-        opp_last_action = obs_array[3:]  # indices for opponent
+        # Sometimes obs is just an empty/0D array at the start
+        if not isinstance(obs, np.ndarray) or obs.shape == ():
+            return action_space.sample()
+
+        # Now obs should be a length-6 vector
+        obs_array = obs
+        opp_last_action = obs_array[3:]  # opponent’s past move one-hot
+
         if 1 in opp_last_action:
             opp_move = np.argmax(opp_last_action)
             self.opp_counts[opp_move] += 1
