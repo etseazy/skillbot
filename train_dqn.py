@@ -1,6 +1,7 @@
 from pettingzoo.classic import tictactoe_v3, rps_v2
 from agents.dqn_agent import DQNAgent
 from agents.random_agent import RandomAgent
+from agents.frequencyAgent import FrequencyAgent
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -82,12 +83,14 @@ def train_dqn_agent(game_env_fn, state_size, action_size, episodes=10000,
         
         # Evaluate win rate every 100 episodes
         if episode % 100 == 0 and episode > 0:
-            win_rate = evaluate_agent(game_env_fn, agent, RandomAgent("player_2"), n_games=100)
-            win_rates.append(win_rate)
+            win_rate_random = evaluate_agent(game_env_fn, agent, RandomAgent("player_2"), n_games=100)
+            win_rate_opponent = evaluate_agent(game_env_fn, agent, opponent.__class__(opponent.player_id), n_games=100)
+            win_rates.append(win_rate_random)
             
             print(f"Episode {episode}/{episodes}")
             print(f"  Epsilon: {agent.epsilon:.3f}")
-            print(f"  Win Rate vs Random: {win_rate:.1f}%")
+            print(f"  Win Rate vs Random: {win_rate_random:.1f}%")
+            print(f"  Win Rate vs {opponent.__class__.__name__}: {win_rate_opponent:.1f}%")
             print(f"  Avg Reward: {np.mean(episode_rewards[-100:]):.3f}")
             if losses:
                 print(f"  Avg Loss: {np.mean(losses[-100:]):.4f}")
@@ -201,12 +204,13 @@ if __name__ == "__main__":
         )
     elif choice == "2":
         # Rock-Paper-Scissors: state = 4, actions = 3
+        # Train against FrequencyAgent (has exploitable patterns!)
         agent = train_dqn_agent(
             game_env_fn=lambda: rps_v2.env(max_cycles=3),
             state_size=4,
             action_size=3,
             episodes=10000,
-            opponent=RandomAgent("player_2"),
+            opponent=FrequencyAgent("player_2"),
             save_path="models/dqn_rps.pth"
         )
     else:
